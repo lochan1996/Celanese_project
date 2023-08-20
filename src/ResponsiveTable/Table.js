@@ -4,71 +4,49 @@ import bookData from "../json/book.json"
 import Footer from '../Footer/Footer';
 
 const Table = () => {
-    const [data,setData] = useState(bookData.Extracts)
-    const [sortedField, setSortedField] = useState(null);
-    const [sortOrder, setSortOrder] = useState('asc');
-  
-    const handleSort = (field) => {
-      if (sortedField === field) {
-        if (sortOrder === 'asc') {
-          setSortOrder('desc');
-        } else if (sortOrder === 'desc') {
-          setSortOrder(null);
-          setSortedField(null);
-        }
-      } else {
-        setSortedField(field);
-        setSortOrder('asc');
-      }
-    };
+  let books = bookData.Extracts
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'asc',
+  });
 
-    // const sortedDates = dates.sort((a, b) => {
-    //     const dateA = new Date(`20${a.replace('/', '-')}`).toISOString();
-    //     const dateB = new Date(`20${b.replace('/', '-')}`).toISOString();
-      
-    //     if (dateA < dateB) {
-    //       return -1;
-    //     } else if (dateA > dateB) {
-    //       return 1;
-    //     } else {
-    //       return 0;
-    //     }
-    //   });
-      
-    const formatedDate = (inputDateString) => {
-        const date = new Date(inputDateString);
-        
-        // Extract year, month, and day components
-        const year = date.getUTCFullYear();
-        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0'); // Adding 1 to month because it's 0-based
-        const day = date.getUTCDate().toString().padStart(2, '0');
+  const sortedBooks = [...books].sort((a, b) => {
+    if (sortConfig.key === 'publicationDate') {
+      const dateA = new Date(a[sortConfig.key]);
+      const dateB = new Date(b[sortConfig.key]);
+      return dateA - dateB;
+    } else if (sortConfig.key === 'author' || sortConfig.key === 'title') {
+      return a[sortConfig.key].localeCompare(b[sortConfig.key]);
+    } else if (sortConfig.key === 'estimatedReadingTimeMinutes') {
+      return a[sortConfig.key] - b[sortConfig.key];
+    }
+    return 0;
+  });
 
-        // Format the date as MM/DD/YY
-        const formattedDate = `${month}/${day}/${year.toString().slice(-2)}`;
-        return formattedDate
-      }
-  
-    const sortedData = data.slice().sort((a, b) => {
-      if (sortedField) {
-        // if(sortedField == 'Publicationdate'){
-        //     console.log("--data--",a,b)
-        // //    return  console.log('==sortedField===',new Date(a['publicationDate']) - new Date(b['publicationDate'])
-        // //    )
-        // }
-        if (a[sortedField] < b[sortedField]) return sortOrder === 'asc' ? -1 : 1;
-        if (a[sortedField] > b[sortedField]) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      } else {
-        return 0;
-      }
-    });
+  if (sortConfig.direction === 'desc') {
+    sortedBooks.reverse();
+  }
 
-      
+  const handleSort = (key) => {
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      setSortConfig({ key, direction: 'desc' });
+    } else if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      setSortConfig({ key: null, direction: 'asc' });
+    } else {
+      setSortConfig({ key, direction: 'asc' });
+    }
+  };
 
-      const handleClick = (id) => {
-        window.location.assign(`https://extracts.panmacmillan.com/extract?isbn=${id}`)       
-      }
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '↑' : '↓';
+    }
+    return '';
+  };
 
+  const handleClick = (id) => {
+    window.location.assign(`https://extracts.panmacmillan.com/extract?isbn=${id}`)       
+  }
   return (
     <div className="table-container">
       <table>
@@ -76,15 +54,15 @@ const Table = () => {
           <tr>
             <th>ID</th>
             <th>Cover</th>
-            <th onClick={() => handleSort('author')}>Author</th>
+            <th onClick={() => handleSort('author')}>Author {getSortIcon('author')}</th>
             <th>Biography</th>
-            <th onClick={() => handleSort('title')}>Title</th>
-            <th onClick={() => handleSort('estimatedReadingTimeMinutes')}>Reading time</th>
-            <th onClick={() => handleSort('Publicationdate')}>Publication date</th>
+            <th onClick={() => handleSort('title')}>Title {getSortIcon('title')}</th>
+            <th onClick={() => handleSort('estimatedReadingTimeMinutes')}>Reading time {getSortIcon('estimatedReadingTimeMinutes')}</th>
+            <th onClick={() => handleSort('Publicationdate')}>Publication date {getSortIcon('Publicationdate')}</th>
           </tr>
         </thead>
         <tbody>
-          {sortedData?.map((item,index) => (
+          {sortedBooks?.map((item,index) => (
             <tr>
               <td data-label="ID">{index+1}</td>
               <td data-label="Cover"  onClick={()=>handleClick(item.isbn)}><img src={item.jacketUrl}/></td>
@@ -92,7 +70,11 @@ const Table = () => {
               <td data-label="Biography"><span dangerouslySetInnerHTML={{__html: item.authorBiography}}/></td>
               <td data-label="Title" onClick={()=>handleClick(item.isbn)}>{item.title}</td>
               <td data-label="Readingtime">{item.estimatedReadingTimeMinutes}</td>
-              <td data-label="Publicationdate">{formatedDate(item.publicationDate)}</td>
+              <td data-label="Publicationdate">{new Date(item.publicationDate).toLocaleDateString('en-US', {
+                  year: '2-digit',
+                  month: '2-digit',
+                  day: '2-digit',
+                })}</td>
             </tr>
           ))}
         </tbody>
