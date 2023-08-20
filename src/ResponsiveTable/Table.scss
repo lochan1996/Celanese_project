@@ -1,0 +1,45 @@
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 90%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  position: relative;
+  left: 5%;
+}
+
+th,
+td {
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: black;
+  cursor: pointer;
+}
+
+tr:nth-child(even) {
+  background-color: dimgrey;
+}
+
+@media (max-width: 600px) {
+  th,
+  td {
+    display: grid;
+    width: 100%;
+  }
+
+  th {
+    text-align: center;
+  }
+
+  td:before {
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    margin-right: 5px;
+  }
+}
